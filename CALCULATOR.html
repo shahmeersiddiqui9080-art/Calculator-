@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<title>CALCULATOR</title>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;font-family:Arial,sans-serif}
+body{
+ display:flex;align-items:center;justify-content:center;overflow:hidden;
+ background:linear-gradient(135deg,#514d5b 0%,#303a47 48%,#12323a 100%);
+}
+body:after{
+ content:"";position:fixed;inset:0;pointer-events:none;opacity:.12;
+ background:
+ radial-gradient(ellipse at 15% 20%,transparent 0 70px,#111 71px 73px,transparent 74px),
+ radial-gradient(ellipse at 75% 70%,transparent 0 85px,#e4a3b8 86px 88px,transparent 89px);
+ background-size:260px 210px,330px 270px;
+}
+.calculator{
+ width:min(330px,94vw);padding:14px;border-radius:14px;
+ background:rgba(20,27,35,.78);
+ border:1px solid rgba(255,255,255,.10);
+ box-shadow:0 12px 30px rgba(0,0,0,.35);
+}
+.display{
+ height:76px;margin-bottom:14px;padding:10px 14px;
+ background:rgba(255,255,255,.06);
+ border:1px solid rgba(255,255,255,.07);
+ display:flex;flex-direction:column;justify-content:center;align-items:flex-end;
+ overflow:hidden;
+}
+.expression{height:19px;width:100%;color:#8d9296;text-align:right;font-size:13px;white-space:nowrap;overflow:hidden}
+.result{width:100%;color:#fff;text-align:right;font-size:23px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.keys{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+button{
+ height:50px;border:0;border-radius:50%;cursor:pointer;
+ color:#fff;background:#27313a;font-size:16px;
+ box-shadow:0 4px 8px rgba(0,0,0,.22);
+ touch-action:manipulation;
+}
+button:active{transform:scale(.94)}
+.action,.operator{color:#9cff55}
+.equal{background:#d89c18;color:#fff}
+@media(max-width:380px){.calculator{padding:12px}.keys{gap:8px}button{height:47px}}
+</style>
+</head>
+<body>
+<div class="calculator">
+ <div class="display">
+  <div id="expression" class="expression"></div>
+  <div id="result" class="result">0</div>
+ </div>
+ <div class="keys">
+  <button class="action" onclick="clearAll()">AC</button>
+  <button class="action" onclick="del()">DEL</button>
+  <button class="action" onclick="percent()">%</button>
+  <button class="operator" onclick="op('/')">÷</button>
+  <button onclick="digit('7')">7</button><button onclick="digit('8')">8</button><button onclick="digit('9')">9</button><button class="operator" onclick="op('*')">×</button>
+  <button onclick="digit('4')">4</button><button onclick="digit('5')">5</button><button onclick="digit('6')">6</button><button class="operator" onclick="op('-')">-</button>
+  <button onclick="digit('1')">1</button><button onclick="digit('2')">2</button><button onclick="digit('3')">3</button><button class="operator" onclick="op('+')">+</button>
+  <button onclick="digit('00')">00</button><button onclick="digit('0')">0</button><button onclick="dot()">.</button><button class="equal" onclick="equal()">=</button>
+ </div>
+</div>
+<script>
+let cur="0",old=null,operator=null,wait=false,done=false;
+const r=document.getElementById("result"),e=document.getElementById("expression");
+function render(){r.textContent=cur}
+function digit(x){
+ if(cur==="Error") clearAll();
+ if(done){cur="0";done=false}
+ if(wait){cur="0";wait=false}
+ if(cur==="0"&&x!=="00")cur=x;else cur+=x;
+ if(cur.length>16)cur=cur.slice(0,16);
+ render();
+}
+function dot(){
+ if(done){cur="0";done=false}
+ if(wait){cur="0";wait=false}
+ if(!cur.includes("."))cur+=".";
+ render();
+}
+function op(x){
+ if(cur==="Error")return;
+ if(operator&&!wait) equal(false);
+ old=parseFloat(cur);operator=x;wait=true;done=false;
+ e.textContent=old+" "+(x==="*"?"×":x==="/"?"÷":x);
+}
+function equal(show=true){
+ if(old===null||!operator)return;
+ let a=old,b=parseFloat(cur),v;
+ if(operator==="+")v=a+b;
+ if(operator==="-")v=a-b;
+ if(operator==="*")v=a*b;
+ if(operator==="/")v=b===0?NaN:a/b;
+ cur=Number.isFinite(v)?String(Math.round((v+Number.EPSILON)*1e12)/1e12):"Error";
+ if(show)e.textContent=a+" "+(operator==="*"?"×":operator==="/"?"÷":operator)+" "+b+" =";
+ old=null;operator=null;wait=false;done=show;render();
+}
+function percent(){
+ if(cur!=="Error")cur=String(parseFloat(cur)/100),render();
+}
+function clearAll(){cur="0";old=null;operator=null;wait=false;done=false;e.textContent="";render()}
+function del(){
+ if(wait||done||cur==="Error"){clearAll();return}
+ cur=cur.length>1?cur.slice(0,-1):"0";render();
+}
+document.addEventListener("keydown",function(x){
+ if(x.key>="0"&&x.key<="9")digit(x.key);
+ else if(x.key===".")dot();
+ else if(["+","-","*","/"].includes(x.key))op(x.key);
+ else if(x.key==="Enter"||x.key==="=")equal();
+ else if(x.key==="Backspace")del();
+ else if(x.key==="Escape")clearAll();
+ else if(x.key==="%")percent();
+});
+</script>
+</body>
+</html>
